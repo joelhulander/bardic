@@ -2,12 +2,12 @@ use rodio::{Decoder, OutputStream, Sink};
 use std::fs::File;
 use std::io::BufReader;
 
-pub struct AudioPlayer {
+pub struct LocalPlayer {
     _stream: OutputStream,
     sink: Sink,
 }
 
-impl AudioPlayer {
+impl LocalPlayer {
     pub fn new() -> Self {
         let _stream =
             rodio::OutputStreamBuilder::open_default_stream().expect("open default audio stream");
@@ -43,7 +43,7 @@ impl AudioPlayer {
     }
 }
 
-impl Default for AudioPlayer {
+impl Default for LocalPlayer {
     fn default() -> Self {
         Self::new()
     }
