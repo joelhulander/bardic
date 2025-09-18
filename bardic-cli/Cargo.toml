@@ -1,0 +1,10 @@
+[package]
+name = "bardic-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "CLI for Bardic"
+
+[dependencies]
+clap = "4.5.47"
