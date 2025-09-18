@@ -1,0 +1,10 @@
+[package]
+name = "bardic-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Core audio management library for Bardic"
+
+[dependencies]
+rodio = "0.21.1"
