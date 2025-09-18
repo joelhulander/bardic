@@ -10,7 +10,7 @@ pub struct LocalPlayer {
 pub enum PlaybackState {
     Playing,
     Paused,
-    Stopped
+    Stopped,
 }
 
 impl LocalPlayer {
@@ -47,11 +47,9 @@ impl LocalPlayer {
     pub fn state(&self) -> PlaybackState {
         if self.sink.empty() {
             PlaybackState::Stopped
-        }
-        else if self.sink.is_paused() {
+        } else if self.sink.is_paused() {
             PlaybackState::Paused
-        }
-        else {
+        } else {
             PlaybackState::Playing
         }
     }
