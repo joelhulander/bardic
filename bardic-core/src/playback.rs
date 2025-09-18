@@ -7,6 +7,12 @@ pub struct LocalPlayer {
     sink: Sink,
 }
 
+pub enum PlaybackState {
+    Playing,
+    Paused,
+    Stopped
+}
+
 impl LocalPlayer {
     pub fn new() -> Self {
         let _stream =
@@ -40,6 +46,18 @@ impl LocalPlayer {
 
     pub fn next(&self) {
         self.sink.skip_one();
+    }
+
+    pub fn state(&self) -> PlaybackState {
+        if self.sink.empty() {
+            PlaybackState::Stopped
+        }
+        else if self.sink.is_paused() {
+            PlaybackState::Paused
+        }
+        else {
+            PlaybackState::Playing
+        }
     }
 }
 
