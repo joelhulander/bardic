@@ -40,10 +40,6 @@ impl LocalPlayer {
         self.sink.play();
     }
 
-    pub fn queue_song(&self, file_path: &str) {
-        self.play(file_path);
-    }
-
     pub fn next(&self) {
         self.sink.skip_one();
     }
