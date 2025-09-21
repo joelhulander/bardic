@@ -8,3 +8,5 @@ description = "Core audio management library for Bardic"
 
 [dependencies]
 rodio = "0.21.1"
+clap = { workspace = true }
+serde = { workspace = true }

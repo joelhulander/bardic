@@ -1,6 +1,5 @@
-use std::path::PathBuf;
-
-use clap::{Parser, Subcommand};
+use bardic_core::{Commands, DaemonCommands, VolumeCommands};
+use clap::Parser;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -8,49 +7,6 @@ use clap::{Parser, Subcommand};
 struct Cli {
     #[command(subcommand)]
     command: Commands,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    Play {
-        song: Option<PathBuf>,
-    },
-    Pause,
-    Stop,
-    Next,
-    Previous,
-    #[command(subcommand)]
-    Volume(VolumeCommands),
-    Seek,
-    #[command(subcommand)]
-    Spotify(SpotifyCommands),
-    Status,
-    NowPlaying,
-    #[command(subcommand)]
-    Daemon(DaemonCommands),
-}
-
-#[derive(Subcommand)]
-enum VolumeCommands {
-    Up,
-    Down,
-}
-
-#[derive(Subcommand)]
-enum SpotifyCommands {
-    Login,
-    Logout,
-    WhoAmI,
-    Play,
-    Pause,
-    Stop,
-}
-
-#[derive(Subcommand)]
-enum DaemonCommands {
-    Start,
-    Stop,
-    Status,
 }
 
 fn main() {
