@@ -1,13 +1,13 @@
 [package]
-name = "bardic"
+name = "bardic-daemon"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "CLI for Bardic"
+description = "Daemon for Bardic"
 
 [dependencies]
 bardic-core = { path = "../bardic-core" }
-clap = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+

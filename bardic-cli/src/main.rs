@@ -1,5 +1,7 @@
-use bardic_core::{Commands, DaemonCommands, VolumeCommands};
+use bardic_core::Commands;
 use clap::Parser;
+use std::io::Write;
+use std::os::unix::net::UnixStream;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -9,63 +11,40 @@ struct Cli {
     command: Commands,
 }
 
-fn main() {
+fn main() -> std::io::Result<()> {
     let cli = Cli::parse();
 
-    match &cli.command {
+    let daemon_command = match cli.command {
         Commands::Play { song } => {
-            println!("Subcommand Play used. song is: {song:?}");
-        }
-        Commands::Pause => {
-            println!("Subcommand Pause used");
-        }
-        Commands::Stop => {
-            println!("Subcommand Stop used");
-        }
-        Commands::Next => {
-            println!("Subcommand Next used");
-        }
-        Commands::Previous => {
-            println!("Subcommand Previous used");
-        }
-        Commands::Volume(volume_command) => {
-            println!("Subcommand Volume used");
-            match volume_command {
-                VolumeCommands::Up => {
-                    println!("Up used");
+            if let Some(song_path) = song {
+                let abs_file_path = song_path.canonicalize()?;
+                Commands::Play {
+                    song: Some(abs_file_path),
                 }
-                VolumeCommands::Down => {
-                    println!("Down used");
-                }
+            } else {
+                Commands::Play { song }
             }
         }
-        Commands::Seek => {
-            println!("Subcommand Seek used");
-        }
-        Commands::Spotify(_) => {
-            println!("Subcommand Spotify used");
-        }
-        Commands::Status => {
-            println!("Subcommand Status used");
-        }
-        Commands::NowPlaying => {
-            println!("Subcommand NowPlaying used");
-        }
-        Commands::Daemon(daemon_command) => {
-            println!("Subcommand Daemon used");
-            match daemon_command {
-                DaemonCommands::Start => {
-                    println!("Start used");
-                }
-                DaemonCommands::Stop => {
-                    println!("Stop used");
-                }
-                DaemonCommands::Status => {
-                    println!("Status used")
-                }
-            }
-        }
-    }
+        Commands::Pause => Commands::Pause,
+        Commands::Stop => Commands::Stop,
+        Commands::Next => Commands::Next,
+        Commands::Previous => Commands::Previous,
+        Commands::Volume(volume_command) => Commands::Volume(volume_command),
+        Commands::Seek => Commands::Seek,
+        Commands::Spotify(spotify_commands) => Commands::Spotify(spotify_commands),
+        Commands::Status => Commands::Status,
+        Commands::NowPlaying => Commands::NowPlaying,
+        Commands::Daemon(daemon_command) => Commands::Daemon(daemon_command),
+    };
+
+    let json_message =
+        serde_json::to_string(&daemon_command).expect("Command serialization failed unexpectedly");
+    let message = format!("{json_message}\n");
+
+    let mut stream = UnixStream::connect("/tmp/mysocket")?;
+    stream.write_all(message.as_bytes())?;
+
+    Ok(())
 }
 
 #[test]

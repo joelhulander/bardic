@@ -1,8 +1,8 @@
-use std::path::PathBuf;
 use clap::Subcommand;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
-#[derive(Serialize, Deserialize, Subcommand)]
+#[derive(Serialize, Deserialize, Subcommand, Debug)]
 pub enum Commands {
     Play {
         song: Option<PathBuf>,
@@ -22,13 +22,13 @@ pub enum Commands {
     Daemon(DaemonCommands),
 }
 
-#[derive(Subcommand, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Subcommand, Debug)]
 pub enum VolumeCommands {
     Up,
     Down,
 }
 
-#[derive(Subcommand, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Subcommand, Debug)]
 pub enum SpotifyCommands {
     Login,
     Logout,
@@ -38,10 +38,9 @@ pub enum SpotifyCommands {
     Stop,
 }
 
-#[derive(Subcommand, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Subcommand, Debug)]
 pub enum DaemonCommands {
     Start,
     Stop,
     Status,
 }
-

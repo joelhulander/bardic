@@ -1,3 +1,3 @@
-pub mod playback;
 pub mod commands;
+pub mod playback;
 pub use commands::*;
