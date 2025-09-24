@@ -33,15 +33,15 @@ impl LocalPlayer {
         }
     }
 
-    pub fn play(&self, file_path: PathBuf) {
-        let file = BufReader::new(File::open(&file_path).unwrap());
-        let source = Decoder::new(BufReader::new(file)).unwrap();
+    pub fn play(&self, file_path: PathBuf) -> std::io::Result<()> {
+        let file = BufReader::new(File::open(&file_path)?);
+        let source = Decoder::new(BufReader::new(file)).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
 
         let current_track = match &*self.current_track.borrow() {
             Some(song) => {
                 if song.path == file_path {
-                    self.resume();
-                    return;
+                    let _ = self.resume();
+                    return Ok(());
                 } else {
                     self.sink.stop();
                 }
@@ -53,6 +53,8 @@ impl LocalPlayer {
         *self.current_track.borrow_mut() = current_track;
 
         self.sink.append(source);
+
+        Ok(())
     }
 
     pub fn pause(&self) {

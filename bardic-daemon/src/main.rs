@@ -37,13 +37,14 @@ impl Daemon {
     fn handle_client(&self, mut stream: UnixStream) -> std::io::Result<()> {
         let mut message = String::new();
         stream.read_to_string(&mut message)?;
-        let command: Commands = from_str(message.as_str()).unwrap();
+        let command: Commands = from_str(message.as_str())?;
 
         match command {
             Commands::Play { song } => {
-                match song {
-                    Some(song) => self.audio_player.play(song),
-                    None => self.audio_player.resume(),
+                if let Some(song) = song {
+                    self.audio_player.play(song)?;
+                } else {
+                    self.audio_player.resume();
                 };
             }
             Commands::Pause => {
