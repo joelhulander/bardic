@@ -5,12 +5,12 @@ use std::io::BufReader;
 use std::path::PathBuf;
 
 pub struct LocalPlayer {
-    _stream: OutputStream,
-    sink: Sink,
+    _stream: RefCell<Option<OutputStream>>,
+    sink: RefCell<Option<Sink>>,
     current_track: RefCell<Option<Track>>,
 }
 
-struct Track {
+pub struct Track {
     path: PathBuf,
 }
 
@@ -22,28 +22,26 @@ pub enum PlaybackState {
 
 impl LocalPlayer {
     pub fn new() -> Self {
-        let _stream =
-            rodio::OutputStreamBuilder::open_default_stream().expect("open default audio stream");
-        let sink = rodio::Sink::connect_new(_stream.mixer());
-
         Self {
-            _stream,
-            sink,
+            _stream: RefCell::new(None),
+            sink: RefCell::new(None),
             current_track: RefCell::new(None),
         }
     }
 
     pub fn play(&self, file_path: PathBuf) -> std::io::Result<()> {
+        self.ensure_sink()?;
         let file = BufReader::new(File::open(&file_path)?);
-        let source = Decoder::new(BufReader::new(file)).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+        let source = Decoder::new(BufReader::new(file))
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
 
         let current_track = match &*self.current_track.borrow() {
             Some(song) => {
                 if song.path == file_path {
-                    let _ = self.resume();
+                    self.resume();
                     return Ok(());
                 } else {
-                    self.sink.stop();
+                    self.sink.borrow().as_ref().unwrap().stop();
                 }
                 Some(Track { path: file_path })
             }
@@ -52,35 +50,66 @@ impl LocalPlayer {
 
         *self.current_track.borrow_mut() = current_track;
 
-        self.sink.append(source);
+        self.sink.borrow().as_ref().unwrap().append(source);
 
         Ok(())
     }
 
     pub fn pause(&self) {
-        self.sink.pause();
+        if let Some(sink) = self.sink.borrow().as_ref() {
+            sink.pause();
+        }
     }
 
     pub fn stop(&self) {
-        self.sink.stop();
+        *self._stream.borrow_mut() = None;
+        *self.sink.borrow_mut() = None;
+        *self.current_track().borrow_mut() = None;
     }
 
     pub fn resume(&self) {
-        self.sink.play();
+        if let Some(sink) = self.sink.borrow().as_ref() {
+            sink.play();
+        }
     }
 
     pub fn next(&self) {
-        self.sink.skip_one();
+        if let Some(sink) = self.sink.borrow().as_ref() {
+            sink.skip_one();
+        }
     }
 
     pub fn state(&self) -> PlaybackState {
-        if self.sink.empty() {
-            PlaybackState::Stopped
-        } else if self.sink.is_paused() {
-            PlaybackState::Paused
-        } else {
-            PlaybackState::Playing
+        match self.sink.borrow().as_ref() {
+            Some(sink) => {
+                if sink.empty() {
+                    PlaybackState::Stopped
+                } else if sink.is_paused() {
+                    PlaybackState::Paused
+                } else {
+                    PlaybackState::Playing
+                }
+            }
+            None => PlaybackState::Stopped,
         }
+    }
+
+    pub fn current_track(&self) -> &RefCell<Option<Track>> {
+        &self.current_track
+    }
+
+    fn ensure_sink(&self) -> std::io::Result<()> {
+        if self.sink.borrow().is_some() {
+            return Ok(());
+        }
+
+        let stream =
+            rodio::OutputStreamBuilder::open_default_stream().map_err(std::io::Error::other)?;
+        let sink = rodio::Sink::connect_new(stream.mixer());
+
+        *self._stream.borrow_mut() = Some(stream);
+        *self.sink.borrow_mut() = Some(sink);
+        Ok(())
     }
 }
 
