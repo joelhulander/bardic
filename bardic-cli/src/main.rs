@@ -1,6 +1,6 @@
 use bardic_core::Commands;
 use clap::Parser;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::os::unix::net::UnixStream;
 
 #[derive(Parser)]
@@ -41,8 +41,15 @@ fn main() -> std::io::Result<()> {
         serde_json::to_string(&daemon_command).expect("Command serialization failed unexpectedly");
     let message = format!("{json_message}\n");
 
-    let mut stream = UnixStream::connect("/tmp/mysocket")?;
+    let mut stream = UnixStream::connect("/tmp/bardic")?;
     stream.write_all(message.as_bytes())?;
+    stream.shutdown(std::net::Shutdown::Write)?;
+
+    let mut response = String::new();
+    stream.read_to_string(&mut response)?;
+    if !response.is_empty() {
+        println!("{response}");
+    }
 
     Ok(())
 }

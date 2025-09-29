@@ -1,8 +1,8 @@
 use bardic_core::Commands;
-use bardic_core::playback::LocalPlayer;
+use bardic_core::playback::{LocalPlayer, PlaybackState};
 use serde_json::from_str;
 use std::fs::*;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
 
 struct Daemon {
@@ -11,14 +11,14 @@ struct Daemon {
 
 impl Daemon {
     fn new() -> Self {
-        remove_file("/tmp/mysocket").ok();
+        remove_file("/tmp/bardic").ok();
 
         Self {
             audio_player: LocalPlayer::new(),
         }
     }
     fn run(&self) -> std::io::Result<()> {
-        let listener = UnixListener::bind("/tmp/mysocket")?;
+        let listener = UnixListener::bind("/tmp/bardic")?;
 
         for stream in listener.incoming() {
             match stream {
@@ -42,10 +42,15 @@ impl Daemon {
         match command {
             Commands::Play { song } => {
                 if let Some(song) = song {
+                    let response = format!("Playing {}", song.display());
+                    stream.write_all(response.as_bytes())?;
                     self.audio_player.play(song)?;
+                } else if let PlaybackState::Stopped = self.audio_player.state() {
+                    stream.write_all(b"No song is currently playing")?;
                 } else {
                     self.audio_player.resume();
-                };
+                    stream.write_all(b"Resuming playback")?;
+                }
             }
             Commands::Pause => {
                 self.audio_player.pause();
