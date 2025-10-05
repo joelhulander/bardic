@@ -1,14 +1,13 @@
 [package]
-name = "bardic-daemon"
+name = "bardic-ipc"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "Daemon for Bardic"
+description.workspace = true
 
 [dependencies]
 bardic-core = { path = "../bardic-core" }
-ctrlc = { version = "3.5.0", features = ["termination"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
-
+sysinfo = "0.37.2"

@@ -1,7 +1,6 @@
-use bardic_core::Commands;
+use bardic_core::{Commands, DaemonCommands};
+use bardic_ipc::{ensure_daemon_running, is_daemon_running, send_command};
 use clap::Parser;
-use std::io::{Read, Write};
-use std::os::unix::net::UnixStream;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -37,18 +36,32 @@ fn main() -> std::io::Result<()> {
         Commands::Daemon(daemon_command) => Commands::Daemon(daemon_command),
     };
 
-    let json_message =
-        serde_json::to_string(&daemon_command).expect("Command serialization failed unexpectedly");
-    let message = format!("{json_message}\n");
+    match &daemon_command {
+        Commands::Daemon(DaemonCommands::Start) => {
+            let _ = ensure_daemon_running()?;
+        }
+        Commands::Daemon(DaemonCommands::Stop) => {
+            if is_daemon_running()? {
+                send_command(&daemon_command)?;
+            } else {
+                println!("Daemon is already stopped");
+            }
+        }
+        Commands::Daemon(DaemonCommands::Status) => {
+            if is_daemon_running()? {
+                println!("Running");
+            } else {
+                println!("Stopped");
+            }
+        }
+        _ => {
+            if !is_daemon_running()? {
+                println!("Daemon is not running");
+                return Ok(());
+            }
 
-    let mut stream = UnixStream::connect("/tmp/bardic")?;
-    stream.write_all(message.as_bytes())?;
-    stream.shutdown(std::net::Shutdown::Write)?;
-
-    let mut response = String::new();
-    stream.read_to_string(&mut response)?;
-    if !response.is_empty() {
-        println!("{response}");
+            send_command(&daemon_command)?;
+        }
     }
 
     Ok(())

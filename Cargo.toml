@@ -2,8 +2,9 @@
 members = [
 	"bardic-core",
 	"bardic-cli",
-	"bardic-gui"
-, "bardic-daemon"]
+	"bardic-gui",
+	"bardic-daemon", 
+	"bardic-ipc"]
 
 resolver = "2"
 
