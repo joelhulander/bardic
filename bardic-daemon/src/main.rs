@@ -31,10 +31,7 @@ impl Daemon {
             match stream {
                 Ok(stream) => {
                     // Connection successfully established
-                    match self.handle_client(stream) {
-                        Ok(_) => {}
-                        Err(_) => {}
-                    }
+                    if self.handle_client(stream).is_ok() {}
                 }
                 Err(_) => {
                     break;
@@ -88,7 +85,7 @@ impl Daemon {
 impl Drop for Daemon {
     fn drop(&mut self) {
         if let Err(e) = remove_file(SOCKET_PATH) {
-            eprintln!("Failed to remove temporary file: {}", e);
+            eprintln!("Failed to remove temporary file: {e}");
         }
     }
 }

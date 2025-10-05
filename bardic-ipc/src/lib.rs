@@ -26,10 +26,7 @@ pub fn ensure_daemon_running() -> std::io::Result<()> {
         thread::sleep(time::Duration::from_millis(100));
     }
 
-    return Err(std::io::Error::new(
-        std::io::ErrorKind::Other,
-        "Failed to start daemon",
-    ));
+    Err(std::io::Error::other("Failed to start daemon"))
 }
 
 pub fn is_daemon_running() -> std::io::Result<bool> {

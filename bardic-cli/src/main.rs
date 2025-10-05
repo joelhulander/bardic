@@ -38,7 +38,7 @@ fn main() -> std::io::Result<()> {
 
     match &daemon_command {
         Commands::Daemon(DaemonCommands::Start) => {
-            let _ = ensure_daemon_running()?;
+            ensure_daemon_running()?;
         }
         Commands::Daemon(DaemonCommands::Stop) => {
             if is_daemon_running()? {
